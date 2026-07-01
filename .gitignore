@@ -1,6 +1,7 @@
 ## .NET
 bin/
 obj/
+TestResults/
 
 ## Visual Studio
 .vs/
