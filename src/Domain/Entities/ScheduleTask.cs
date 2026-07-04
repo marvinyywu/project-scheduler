@@ -13,4 +13,5 @@ public sealed class ScheduleTask
     public int TotalFloat { get; set; }
     public int FreeFloat { get; set; }
     public bool IsCritical { get; set; }
+    public int ProjectId { get; set; }
 }
