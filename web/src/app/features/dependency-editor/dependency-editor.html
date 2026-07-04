@@ -1,0 +1,35 @@
+<form class="dependency-editor-form" [formGroup]="addDependencyForm" (ngSubmit)="submit()">
+  <mat-form-field appearance="outline">
+    <mat-label>Predecessor</mat-label>
+    <mat-select formControlName="predecessorId">
+      @for (task of store.tasks(); track task.id) {
+        <mat-option [value]="task.id">{{ task.name }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Successor</mat-label>
+    <mat-select formControlName="successorId">
+      @for (task of store.tasks(); track task.id) {
+        <mat-option [value]="task.id">{{ task.name }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Type</mat-label>
+    <mat-select formControlName="type">
+      @for (type of dependencyTypes; track type) {
+        <mat-option [value]="type">{{ type }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Lag (days)</mat-label>
+    <input matInput type="number" step="1" min="0" formControlName="lagDays" />
+  </mat-form-field>
+
+  <button mat-flat-button type="submit" [disabled]="addDependencyForm.invalid">Add dependency</button>
+</form>

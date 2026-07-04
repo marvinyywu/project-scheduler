@@ -1,0 +1,21 @@
+<div class="gantt-chart">
+  <div class="gantt-labels">
+    @for (task of store.tasks(); track task.id) {
+      <div class="gantt-label" [style.height.px]="rowHeight">{{ task.name }}</div>
+    }
+  </div>
+
+  <svg [attr.width]="chartWidth" [attr.height]="chartHeight()">
+    @for (bar of bars(); track bar.taskId) {
+      <rect
+        class="gantt-bar"
+        [class.critical]="bar.isCritical"
+        [attr.x]="bar.x"
+        [attr.y]="bar.y"
+        [attr.width]="bar.width"
+        [attr.height]="barHeight"
+        rx="3"
+      />
+    }
+  </svg>
+</div>

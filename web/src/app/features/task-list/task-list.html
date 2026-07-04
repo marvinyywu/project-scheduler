@@ -1,0 +1,68 @@
+<div class="task-list">
+  <table mat-table [dataSource]="store.tasks()" class="mat-elevation-z1">
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef>Name</th>
+      <td mat-cell *matCellDef="let task">{{ task.name }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="duration">
+      <th mat-header-cell *matHeaderCellDef>Duration</th>
+      <td mat-cell *matCellDef="let task">{{ task.duration }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="earlyStart">
+      <th mat-header-cell *matHeaderCellDef>ES</th>
+      <td mat-cell *matCellDef="let task">{{ task.earlyStart }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="earlyFinish">
+      <th mat-header-cell *matHeaderCellDef>EF</th>
+      <td mat-cell *matCellDef="let task">{{ task.earlyFinish }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="lateStart">
+      <th mat-header-cell *matHeaderCellDef>LS</th>
+      <td mat-cell *matCellDef="let task">{{ task.lateStart }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="lateFinish">
+      <th mat-header-cell *matHeaderCellDef>LF</th>
+      <td mat-cell *matCellDef="let task">{{ task.lateFinish }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="totalFloat">
+      <th mat-header-cell *matHeaderCellDef>Float</th>
+      <td mat-cell *matCellDef="let task">{{ task.totalFloat }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="isCritical">
+      <th mat-header-cell *matHeaderCellDef>Critical</th>
+      <td mat-cell *matCellDef="let task">
+        @if (task.isCritical) {
+          <mat-icon aria-label="Critical task">check_circle</mat-icon>
+        }
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr
+      mat-row
+      *matRowDef="let task; columns: displayedColumns"
+      [class.critical-row]="store.criticalTaskIds().has(task.id)"
+    ></tr>
+  </table>
+
+  <form class="add-task-form" [formGroup]="addTaskForm" (ngSubmit)="submit()">
+    <mat-form-field appearance="outline">
+      <mat-label>Name</mat-label>
+      <input matInput formControlName="name" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Duration</mat-label>
+      <input matInput type="number" step="1" min="1" formControlName="duration" />
+    </mat-form-field>
+
+    <button mat-flat-button type="submit" [disabled]="addTaskForm.invalid">Add task</button>
+  </form>
+</div>

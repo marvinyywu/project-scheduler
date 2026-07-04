@@ -1,0 +1,12 @@
+<div class="schedule-page">
+  @if (store.project(); as project) {
+    <h1>{{ project.name }}</h1>
+    <p>Duration: {{ store.projectDuration() }} days</p>
+
+    <app-gantt-chart />
+    <app-task-list />
+    <app-dependency-editor />
+  } @else {
+    <p>Loading project…</p>
+  }
+</div>
