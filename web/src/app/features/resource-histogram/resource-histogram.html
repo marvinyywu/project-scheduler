@@ -1,0 +1,21 @@
+<div class="resource-histogram">
+  <div class="histogram-labels">
+    @for (resource of store.resources(); track resource.id) {
+      <div class="histogram-label" [style.height.px]="rowHeight">{{ resource.name }}</div>
+    }
+  </div>
+
+  <svg [attr.width]="chartWidth" [attr.height]="chartHeight()">
+    @for (bar of bars(); track bar.resourceId + '-' + bar.day) {
+      <rect
+        class="histogram-bar"
+        [class.over-allocated]="bar.isOverAllocated"
+        [attr.x]="bar.x"
+        [attr.y]="bar.y"
+        [attr.width]="bar.width"
+        [attr.height]="barHeight"
+        rx="3"
+      />
+    }
+  </svg>
+</div>

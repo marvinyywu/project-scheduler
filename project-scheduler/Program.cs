@@ -22,6 +22,9 @@ builder.Services.AddScoped<ISchedulingUnitOfWork, SchedulingUnitOfWork>();
 builder.Services.AddScoped<AddTaskService>();
 builder.Services.AddScoped<AddDependencyService>();
 builder.Services.AddScoped<RecomputeScheduleService>();
+builder.Services.AddScoped<AddResourceService>();
+builder.Services.AddScoped<AssignResourceService>();
+builder.Services.AddScoped<LevelScheduleService>();
 
 builder.Services.AddCors(options =>
     options.AddPolicy(AngularDevCors, policy => policy

@@ -2,13 +2,17 @@ using Application.Scheduling;
 using Domain.Entities;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using project_scheduler.Dtos;
 
 namespace project_scheduler.Controllers;
 
 [ApiController]
 [Route("api/projects")]
-public sealed class ProjectsController(SchedulingDbContext db, RecomputeScheduleService recomputeScheduleService) : ControllerBase
+public sealed class ProjectsController(
+    SchedulingDbContext db,
+    RecomputeScheduleService recomputeScheduleService,
+    LevelScheduleService levelScheduleService) : ControllerBase
 {
     [HttpPost]
     public async Task<ActionResult<ProjectResponse>> Create(CreateProjectRequest request)
@@ -37,6 +41,29 @@ public sealed class ProjectsController(SchedulingDbContext db, RecomputeSchedule
             RecomputeOutcome.Success => Ok(new RecomputeResponse(result.ProjectDuration)),
             RecomputeOutcome.ProjectNotFound => NotFound(),
             RecomputeOutcome.CycleDetected => Conflict(),
+            _ => Problem()
+        };
+    }
+
+    [HttpGet("{id:int}/assignments")]
+    public async Task<ActionResult<IReadOnlyList<AssignmentResponse>>> GetAssignments(int id)
+    {
+        var taskIds = await db.Tasks.Where(t => t.ProjectId == id).Select(t => t.Id).ToListAsync();
+        var assignments = await db.Assignments.Where(a => taskIds.Contains(a.TaskId)).ToListAsync();
+        return Ok(assignments.Select(AssignmentResponse.FromEntity).ToList());
+    }
+
+    [HttpPost("{id:int}/level")]
+    public async Task<ActionResult<LevelingResponse>> Level(int id)
+    {
+        var result = await levelScheduleService.LevelAsync(id);
+        return result.Outcome switch
+        {
+            LevelScheduleOutcome.Success => Ok(new LevelingResponse(
+                result.OriginalProjectDuration,
+                result.LeveledProjectDuration,
+                result.LeveledTasks!.Select(LeveledTaskResponse.FromDomain).ToList())),
+            LevelScheduleOutcome.ProjectNotFound => NotFound(),
             _ => Problem()
         };
     }

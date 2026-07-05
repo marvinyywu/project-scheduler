@@ -1,0 +1,56 @@
+<div class="resource-panel">
+  <form class="add-resource-form" [formGroup]="addResourceForm" (ngSubmit)="submitResource()">
+    <mat-form-field appearance="outline">
+      <mat-label>Resource name</mat-label>
+      <input matInput formControlName="name" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Max units/day</mat-label>
+      <input matInput type="number" step="1" min="1" formControlName="maxUnitsPerDay" />
+    </mat-form-field>
+
+    <button mat-flat-button type="submit" [disabled]="addResourceForm.invalid">Add resource</button>
+  </form>
+
+  <form class="assign-resource-form" [formGroup]="assignResourceForm" (ngSubmit)="submitAssignment()">
+    <mat-form-field appearance="outline">
+      <mat-label>Task</mat-label>
+      <mat-select formControlName="taskId">
+        @for (task of store.tasks(); track task.id) {
+          <mat-option [value]="task.id">{{ task.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Resource</mat-label>
+      <mat-select formControlName="resourceId">
+        @for (resource of store.resources(); track resource.id) {
+          <mat-option [value]="resource.id">{{ resource.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Units</mat-label>
+      <input matInput type="number" step="1" min="1" formControlName="units" />
+    </mat-form-field>
+
+    <button mat-flat-button type="submit" [disabled]="assignResourceForm.invalid">Assign</button>
+  </form>
+
+  <button mat-stroked-button type="button" (click)="level()">Level resources</button>
+
+  @if (store.leveling(); as leveling) {
+    <p>
+      Project finish: {{ leveling.originalProjectDuration }} days
+      @if (leveling.leveledProjectDuration > leveling.originalProjectDuration) {
+        → <strong>{{ leveling.leveledProjectDuration }} days after leveling</strong>
+        (+{{ leveling.leveledProjectDuration - leveling.originalProjectDuration }})
+      } @else {
+        (no change — no over-allocation to resolve)
+      }
+    </p>
+  }
+</div>

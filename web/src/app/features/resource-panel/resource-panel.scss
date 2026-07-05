@@ -1,0 +1,13 @@
+.resource-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.add-resource-form,
+.assign-resource-form {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}

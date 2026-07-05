@@ -19,8 +19,9 @@ ASP.NET Core Web API (project-scheduler/) -- DTOs, controllers, OpenAPI + Scalar
     |
     v
 Application layer (src/Application) -- AddTaskService, AddDependencyService,
-    |                                   RecomputeScheduleService
-    +--> Domain / Scheduling Engine  (CPM forward+backward pass, float) -- NO framework deps
+    |                                   RecomputeScheduleService, LevelScheduleService
+    +--> Domain / Scheduling Engine  (CPM forward+backward pass, float,
+    |                                  priority-rule resource leveling) -- NO framework deps
     |
     +--> Infrastructure / EF Core (src/Infrastructure) -- SQL Server LocalDB
 ```
@@ -34,16 +35,17 @@ outside of `Domain.Tests`.
 
 ## Stack
 
-- Engine: plain C# class library (`src/Domain`) — CPM today; leveling and EVM planned
+- Engine: plain C# class library (`src/Domain`) — CPM and a priority-rule
+  resource leveler today; EVM planned
 - Application: use-case services (`src/Application/Scheduling`) orchestrating the engine and persistence
 - Tests: xUnit (`tests/Domain.Tests`, `tests/Application.Tests`)
 - API: ASP.NET Core Web API (`project-scheduler/`) — DTOs and controllers wired to the Application layer, with an OpenAPI document and a Scalar UI for exploring it
 - Frontend: Angular (`web/`) — standalone components, Angular Material, a
-  signal-based `ScheduleStore`, and an SVG Gantt using a `d3-scale` linear
-  scale over project-day
+  signal-based `ScheduleStore`, an SVG Gantt using a `d3-scale` linear scale
+  over project-day, and a resource histogram flagging over-allocation
 - Data: EF Core + SQL Server LocalDB (`src/Infrastructure`), migrations under `src/Infrastructure/Migrations`
 
-## Status: Week 3 (the Angular app and the Gantt)
+## Status: Week 4 (resources, over-allocation, and leveling)
 
 Built so far:
 
@@ -90,11 +92,37 @@ Built so far:
 - Browser smoke test: rebuilt the section 1.4 worked example through the UI
   and confirmed the Gantt bars, critical-path highlighting, and cycle
   rejection all match the curl-driven Week 2 result
+- `Resource`/`Assignment` entities and EF Core mapping — `Resources` and
+  `Assignments` tables, `Assignments` cascading on `TaskId` and restricting
+  on `ResourceId` (`src/Domain/Entities`, `src/Infrastructure/Persistence`)
+- `ResourceLeveler`: a priority-list-scheduling heuristic (lowest total float
+  first, walking the dependency DAG in topological order, delaying a task
+  day-by-day only when an assigned resource is full) that returns leveled
+  start/finish dates without mutating the authoritative CPM schedule
+  (`src/Domain/Scheduling`)
+- `ResourceLevelerTests` extending the section 1.4 worked example with a
+  resource shared by two parallel tasks — proving the leveler both resolves
+  a real over-allocation (pushing the project finish from 12 to 14 days) and
+  leaves the schedule untouched when capacity is sufficient
+- Application-layer `AddResourceService`, `AssignResourceService`, and
+  `LevelScheduleService` (`src/Application/Scheduling`), plus
+  `ResourcesController` and `AssignmentsController` exposing them over HTTP
+- A resource panel (add-resource and assign-resource forms, a "Level
+  resources" action with a before/after project-finish summary) and a
+  resource histogram (SVG stacked bars per resource per day, red when usage
+  exceeds capacity) — the histogram is a client-side aggregation over
+  already-fetched data, not a server call, the same way `criticalTaskIds`
+  and `projectDuration` are computed (`web/src/app/features`,
+  `web/src/app/core/state`)
+- Browser smoke test: assigned a capacity-limited resource to two tasks that
+  CPM schedules in parallel, confirmed the histogram flags the
+  over-allocation, ran leveling, and confirmed both the before/after summary
+  (12 → 14 days) and the now-clear histogram match `ResourceLevelerTests`
 
 Not yet built: working-day calendars (the Gantt's x-axis is still linear
 project-day offsets, not calendar dates), Gantt dependency connector arrows,
-a project picker/routing, resource leveling, EVM, baselines, and deployment.
-See the six-week plan in the project pack for what's next.
+a project picker/routing, EVM, baselines, and deployment. See the six-week
+plan in the project pack for what's next.
 
 ## How to Run
 
