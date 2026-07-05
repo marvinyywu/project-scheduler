@@ -10,4 +10,7 @@ public sealed class CreateTaskRequest
 
     [Range(1, int.MaxValue)]
     public int Duration { get; set; }
+
+    [Range(0, double.MaxValue)]
+    public decimal Budget { get; set; }
 }

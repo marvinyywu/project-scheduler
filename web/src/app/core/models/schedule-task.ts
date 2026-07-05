@@ -10,4 +10,7 @@ export interface ScheduleTask {
   totalFloat: number;
   freeFloat: number;
   isCritical: boolean;
+  budget: number;
+  percentComplete: number;
+  actualCost: number;
 }

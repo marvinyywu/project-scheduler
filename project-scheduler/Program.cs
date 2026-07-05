@@ -25,6 +25,9 @@ builder.Services.AddScoped<RecomputeScheduleService>();
 builder.Services.AddScoped<AddResourceService>();
 builder.Services.AddScoped<AssignResourceService>();
 builder.Services.AddScoped<LevelScheduleService>();
+builder.Services.AddScoped<UpdateTaskProgressService>();
+builder.Services.AddScoped<ComputeEvmService>();
+builder.Services.AddScoped<CaptureBaselineService>();
 
 builder.Services.AddCors(options =>
     options.AddPolicy(AngularDevCors, policy => policy

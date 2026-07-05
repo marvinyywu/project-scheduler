@@ -10,6 +10,9 @@ import { CreateResourceRequest } from '../models/create-resource-request';
 import { Assignment } from '../models/assignment';
 import { CreateAssignmentRequest } from '../models/create-assignment-request';
 import { LevelingResponse } from '../models/leveling-response';
+import { UpdateTaskProgressRequest } from '../models/update-task-progress-request';
+import { EvmReport } from '../models/evm-report';
+import { Baseline } from '../models/baseline';
 import { buildResourceHistogram } from './resource-histogram';
 
 function isHttpConflict(error: unknown): boolean {
@@ -26,6 +29,8 @@ export class ScheduleStore {
   readonly resources = signal<Resource[]>([]);
   readonly assignments = signal<Assignment[]>([]);
   readonly leveling = signal<LevelingResponse | null>(null);
+  readonly evmReport = signal<EvmReport | null>(null);
+  readonly baseline = signal<Baseline | null>(null);
 
   readonly criticalTaskIds = computed(
     () => new Set(this.tasks().filter(t => t.isCritical).map(t => t.id)),
@@ -42,6 +47,7 @@ export class ScheduleStore {
     await this.refreshTasks(projectId);
     this.resources.set(await this.api.getResources());
     await this.refreshAssignments(projectId);
+    this.baseline.set(await this.api.getBaseline(projectId));
   }
 
   async addTask(projectId: number, request: CreateTaskRequest): Promise<void> {
@@ -75,6 +81,19 @@ export class ScheduleStore {
 
   async levelSchedule(): Promise<void> {
     this.leveling.set(await this.api.levelSchedule(this.project()!.id));
+  }
+
+  async updateTaskProgress(taskId: number, request: UpdateTaskProgressRequest): Promise<void> {
+    await this.api.updateTaskProgress(this.project()!.id, taskId, request);
+    await this.refreshTasks(this.project()!.id);
+  }
+
+  async loadEvm(asOfDay: number): Promise<void> {
+    this.evmReport.set(await this.api.getEvmReport(this.project()!.id, asOfDay));
+  }
+
+  async captureBaseline(): Promise<void> {
+    this.baseline.set(await this.api.captureBaseline(this.project()!.id));
   }
 
   private async refreshTasks(projectId: number): Promise<void> {

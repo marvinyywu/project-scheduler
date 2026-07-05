@@ -8,12 +8,12 @@ namespace project_scheduler.Controllers;
 
 [ApiController]
 [Route("api/projects/{projectId:int}/tasks")]
-public sealed class TasksController(SchedulingDbContext db, AddTaskService addTaskService) : ControllerBase
+public sealed class TasksController(SchedulingDbContext db, AddTaskService addTaskService, UpdateTaskProgressService updateTaskProgressService) : ControllerBase
 {
     [HttpPost]
     public async Task<ActionResult<TaskResponse>> Create(int projectId, CreateTaskRequest request)
     {
-        var result = await addTaskService.AddAsync(projectId, request.Name, request.Duration);
+        var result = await addTaskService.AddAsync(projectId, request.Name, request.Duration, request.Budget);
 
         return result.Outcome switch
         {
@@ -44,5 +44,18 @@ public sealed class TasksController(SchedulingDbContext db, AddTaskService addTa
     {
         var task = await db.Tasks.FirstOrDefaultAsync(t => t.Id == id && t.ProjectId == projectId);
         return task is null ? NotFound() : Ok(TaskResponse.FromEntity(task));
+    }
+
+    [HttpPatch("{id:int}/progress")]
+    public async Task<ActionResult<TaskResponse>> UpdateProgress(int projectId, int id, UpdateTaskProgressRequest request)
+    {
+        var result = await updateTaskProgressService.UpdateAsync(id, request.PercentComplete, request.ActualCost);
+
+        return result.Outcome switch
+        {
+            UpdateTaskProgressOutcome.Success => Ok(TaskResponse.FromEntity(result.Task!)),
+            UpdateTaskProgressOutcome.TaskNotFound => NotFound(),
+            _ => Problem()
+        };
     }
 }

@@ -29,6 +29,12 @@ public sealed class SchedulingUnitOfWork(SchedulingDbContext dbContext) : ISched
     public Task<List<Assignment>> GetAssignmentsForTasksAsync(IReadOnlyCollection<int> taskIds, CancellationToken cancellationToken = default)
         => dbContext.Assignments.Where(a => taskIds.Contains(a.TaskId)).ToListAsync(cancellationToken);
 
+    public Task<Baseline?> FindLatestBaselineAsync(int projectId, CancellationToken cancellationToken = default)
+    => dbContext.Baselines
+        .Where(b => b.ProjectId == projectId)
+        .OrderByDescending(b => b.CapturedAt)
+        .FirstOrDefaultAsync(cancellationToken);
+
     public void AddTask(ScheduleTask task) => dbContext.Tasks.Add(task);
 
     public void AddDependency(Dependency dependency) => dbContext.Dependencies.Add(dependency);
@@ -38,6 +44,8 @@ public sealed class SchedulingUnitOfWork(SchedulingDbContext dbContext) : ISched
     public void AddAssignment(Assignment assignment) => dbContext.Assignments.Add(assignment);
 
     public void RemoveDependency(Dependency dependency) => dbContext.Dependencies.Remove(dependency);
+
+    public void AddBaseline(Baseline baseline) => dbContext.Baselines.Add(baseline);
 
     public Task SaveChangesAsync(CancellationToken cancellationToken = default)
         => dbContext.SaveChangesAsync(cancellationToken);

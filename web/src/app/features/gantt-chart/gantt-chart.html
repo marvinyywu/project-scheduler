@@ -6,6 +6,16 @@
   </div>
 
   <svg [attr.width]="chartWidth" [attr.height]="chartHeight()">
+    @for (bar of baselineBars(); track bar.taskId) {
+      <rect
+        class="baseline-bar"
+        [attr.x]="bar.x"
+        [attr.y]="bar.y"
+        [attr.width]="bar.width"
+        [attr.height]="baselineBarHeight"
+        rx="2"
+      />
+    }
     @for (bar of bars(); track bar.taskId) {
       <rect
         class="gantt-bar"

@@ -10,6 +10,7 @@ public sealed class SchedulingDbContext(DbContextOptions<SchedulingDbContext> op
     public DbSet<Dependency> Dependencies => Set<Dependency>();
     public DbSet<Resource> Resources => Set<Resource>();
     public DbSet<Assignment> Assignments => Set<Assignment>();
+    public DbSet<Baseline> Baselines => Set<Baseline>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
         => modelBuilder.ApplyConfigurationsFromAssembly(typeof(SchedulingDbContext).Assembly);

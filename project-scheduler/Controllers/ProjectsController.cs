@@ -12,7 +12,9 @@ namespace project_scheduler.Controllers;
 public sealed class ProjectsController(
     SchedulingDbContext db,
     RecomputeScheduleService recomputeScheduleService,
-    LevelScheduleService levelScheduleService) : ControllerBase
+    LevelScheduleService levelScheduleService,
+    ComputeEvmService computeEvmService,
+    CaptureBaselineService captureBaselineService) : ControllerBase
 {
     [HttpPost]
     public async Task<ActionResult<ProjectResponse>> Create(CreateProjectRequest request)
@@ -66,5 +68,42 @@ public sealed class ProjectsController(
             LevelScheduleOutcome.ProjectNotFound => NotFound(),
             _ => Problem()
         };
+    }
+
+    [HttpGet("{id:int}/evm")]
+    public async Task<ActionResult<EvmReportResponse>> GetEvm(int id, [FromQuery] int asOfDay)
+    {
+        var result = await computeEvmService.ComputeAsync(id, asOfDay);
+
+        return result.Outcome switch
+        {
+            ComputeEvmOutcome.Success => Ok(EvmReportResponse.FromDomain(result.Report)),
+            ComputeEvmOutcome.ProjectNotFound => NotFound(),
+            _ => Problem()
+        };
+    }
+
+    [HttpPost("{id:int}/baseline")]
+    public async Task<ActionResult<BaselineResponse>> CaptureBaseline(int id)
+    {
+        var result = await captureBaselineService.CaptureAsync(id);
+
+        return result.Outcome switch
+        {
+            CaptureBaselineOutcome.Success => Ok(BaselineResponse.FromEntity(result.Baseline!)),
+            CaptureBaselineOutcome.ProjectNotFound => NotFound(),
+            _ => Problem()
+        };
+    }
+
+    [HttpGet("{id:int}/baseline")]
+    public async Task<ActionResult<BaselineResponse>> GetLatestBaseline(int id)
+    {
+        var baseline = await db.Baselines
+            .Where(b => b.ProjectId == id)
+            .OrderByDescending(b => b.CapturedAt)
+            .FirstOrDefaultAsync();
+
+        return baseline is null ? NotFound() : Ok(BaselineResponse.FromEntity(baseline));
     }
 }

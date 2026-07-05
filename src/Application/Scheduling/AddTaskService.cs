@@ -4,7 +4,7 @@ namespace Application.Scheduling;
 
 public sealed class AddTaskService(ISchedulingUnitOfWork unitOfWork)
 {
-    public async Task<AddTaskResult> AddAsync(int projectId, string name, int duration, CancellationToken cancellationToken = default)
+    public async Task<AddTaskResult> AddAsync(int projectId, string name, int duration, decimal budget = 0m, CancellationToken cancellationToken = default)
     {
         var project = await unitOfWork.FindProjectAsync(projectId, cancellationToken);
         if (project is null)
@@ -16,7 +16,8 @@ public sealed class AddTaskService(ISchedulingUnitOfWork unitOfWork)
         {
             Name = name,
             Duration = duration,
-            ProjectId = projectId
+            ProjectId = projectId,
+            Budget = budget
         };
 
         unitOfWork.AddTask(task);

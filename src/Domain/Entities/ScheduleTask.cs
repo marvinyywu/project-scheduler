@@ -14,4 +14,8 @@ public sealed class ScheduleTask
     public int FreeFloat { get; set; }
     public bool IsCritical { get; set; }
     public int ProjectId { get; set; }
+
+    public decimal Budget { get; init; }
+    public double PercentComplete { get; set; }
+    public decimal ActualCost { get; set; }
 }

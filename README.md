@@ -12,16 +12,19 @@ Full project scope and rationale: [`project-scheduler/Project_Scheduling_App_Pro
 ## Architecture
 
 ```text
-Angular SPA (web/) -- Material, signal-based ScheduleStore, SVG + D3-scale Gantt
+Angular SPA (web/) -- Material, signal-based ScheduleStore, SVG + D3-scale Gantt,
+    |                  baseline drift bars, EVM dashboard
     | HTTPS / JSON
     v
 ASP.NET Core Web API (project-scheduler/) -- DTOs, controllers, OpenAPI + Scalar UI
     |
     v
 Application layer (src/Application) -- AddTaskService, AddDependencyService,
-    |                                   RecomputeScheduleService, LevelScheduleService
+    |                                   RecomputeScheduleService, LevelScheduleService,
+    |                                   UpdateTaskProgressService, ComputeEvmService,
+    |                                   CaptureBaselineService
     +--> Domain / Scheduling Engine  (CPM forward+backward pass, float,
-    |                                  priority-rule resource leveling) -- NO framework deps
+    |                                  priority-rule resource leveling, EVM) -- NO framework deps
     |
     +--> Infrastructure / EF Core (src/Infrastructure) -- SQL Server LocalDB
 ```
@@ -35,17 +38,18 @@ outside of `Domain.Tests`.
 
 ## Stack
 
-- Engine: plain C# class library (`src/Domain`) — CPM and a priority-rule
-  resource leveler today; EVM planned
+- Engine: plain C# class library (`src/Domain`) — CPM, a priority-rule
+  resource leveler, and an `EvmCalculator` (`src/Domain/Cost`)
 - Application: use-case services (`src/Application/Scheduling`) orchestrating the engine and persistence
 - Tests: xUnit (`tests/Domain.Tests`, `tests/Application.Tests`)
 - API: ASP.NET Core Web API (`project-scheduler/`) — DTOs and controllers wired to the Application layer, with an OpenAPI document and a Scalar UI for exploring it
 - Frontend: Angular (`web/`) — standalone components, Angular Material, a
   signal-based `ScheduleStore`, an SVG Gantt using a `d3-scale` linear scale
-  over project-day, and a resource histogram flagging over-allocation
+  over project-day with baseline drift bars, a resource histogram flagging
+  over-allocation, and an EVM dashboard with status colours
 - Data: EF Core + SQL Server LocalDB (`src/Infrastructure`), migrations under `src/Infrastructure/Migrations`
 
-## Status: Week 4 (resources, over-allocation, and leveling)
+## Status: Week 5 (budget, baseline, and EVM)
 
 Built so far:
 
@@ -118,11 +122,53 @@ Built so far:
   CPM schedules in parallel, confirmed the histogram flags the
   over-allocation, ran leveling, and confirmed both the before/after summary
   (12 → 14 days) and the now-clear histogram match `ResourceLevelerTests`
+- `ScheduleTask` gains `Budget` (set once at creation, planning-time),
+  `PercentComplete`, and `ActualCost` (updated repeatedly as work
+  progresses, status-time) — `Budget`/`ActualCost` mapped as
+  `decimal(18,2)` (`src/Domain/Entities`, `src/Infrastructure/Persistence/Configurations`)
+- `Baseline` entity storing a point-in-time JSON snapshot of every task's
+  `EarlyStart`/`EarlyFinish` (`Baselines` table, cascading on `ProjectId`) —
+  a snapshot rather than parallel `BaselineStart`/`BaselineFinish` columns,
+  so capturing a second or third baseline needs no schema change
+  (`src/Domain/Entities`, `src/Infrastructure/Persistence`)
+- `EvmCalculator`: a framework-free static method computing PV (linear
+  interpolation of budget across a task's `EarlyStart`/`EarlyFinish` window
+  against a status-date project-day), EV (`Budget × PercentComplete`), and
+  the AC/SV/CV/SPI/CPI/EAC/ETC/VAC roll-up (`src/Domain/Cost`)
+- `EvmCalculatorTests` reproducing a hand-worked EVM table extending the
+  section 1.4 worked example (BAC 1400, PV 700, EV 740, AC 750 at status
+  day 5, EAC ≈1418.92), plus zero-PV and zero-AC edge cases proving SPI/CPI
+  come back `0` instead of dividing by zero
+- Application-layer `UpdateTaskProgressService`, `ComputeEvmService`, and
+  `CaptureBaselineService` (`src/Application/Scheduling`), plus a
+  `ComputeEvm_MatchesHandWorkedExample_AfterPersistenceRoundTrip` test
+  proving the same hand-worked numbers survive a full persistence
+  round-trip through a fresh `DbContext`, the same pattern Week 2
+  established for CPM
+- New endpoints: `PATCH .../tasks/{id}/progress`, `GET .../evm?asOfDay=`,
+  `POST .../baseline`, `GET .../baseline` (`ProjectsController`,
+  `TasksController`)
+- An `EvmDashboard` feature component — a task-progress form (percent
+  complete + actual cost), an "as of day" input with Refresh/Capture
+  baseline actions, and a stat grid for BAC/PV/EV/AC/SV/CV/SPI/CPI/EAC/ETC/VAC
+  that turns SPI or CPI red below 1.0 — plus a Budget field and column added
+  to the task list, since `Budget` is otherwise unreachable from the UI
+  (`web/src/app/features/evm-dashboard`, `web/src/app/features/task-list`)
+- Baseline drift bars on the Gantt: a `baselineBars` computed signal renders
+  a thin grey bar from the captured snapshot beneath each task's current bar
+  (`web/src/app/features/gantt-chart`)
+- Browser smoke test: captured a baseline on the section 1.4 network, added
+  a new task with a budget and wired it in front of task A (shifting the
+  whole network +2 days on recompute), and confirmed the grey baseline bars
+  stayed at the original dates while the current bars moved — then drove
+  the progress form and confirmed the EVM stat grid matched hand
+  computation exactly (EV $75/AC $60/SPI 1.50/CPI 1.25 and, at 10%/$200,
+  EV $10/AC $200/SPI 0.20/CPI 0.05 rendering both red)
 
 Not yet built: working-day calendars (the Gantt's x-axis is still linear
 project-day offsets, not calendar dates), Gantt dependency connector arrows,
-a project picker/routing, EVM, baselines, and deployment. See the six-week
-plan in the project pack for what's next.
+a project picker/routing, and deployment. See the six-week plan in the
+project pack for what's next.
 
 ## How to Run
 

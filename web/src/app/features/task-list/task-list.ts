@@ -1,4 +1,5 @@
 import { Component, inject } from '@angular/core';
+import { CurrencyPipe } from '@angular/common';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -14,6 +15,7 @@ function integerValidator(control: AbstractControl): ValidationErrors | null {
 @Component({
   selector: 'app-task-list',
   imports: [
+    CurrencyPipe,
     ReactiveFormsModule,
     MatTableModule,
     MatFormFieldModule,
@@ -30,6 +32,7 @@ export class TaskList {
   protected readonly displayedColumns = [
     'name',
     'duration',
+    'budget',
     'earlyStart',
     'earlyFinish',
     'lateStart',
@@ -43,6 +46,7 @@ export class TaskList {
   protected readonly addTaskForm = this.fb.nonNullable.group({
     name: ['', Validators.required],
     duration: [1, [Validators.required, Validators.min(1), integerValidator]],
+    budget: [0, [Validators.required, Validators.min(0)]],
   });
 
   protected async submit(): Promise<void> {
@@ -52,6 +56,6 @@ export class TaskList {
     }
 
     await this.store.addTask(projectId, this.addTaskForm.getRawValue());
-    this.addTaskForm.reset({ name: '', duration: 1 });
+    this.addTaskForm.reset({ name: '', duration: 1, budget: 0 });
   }
 }

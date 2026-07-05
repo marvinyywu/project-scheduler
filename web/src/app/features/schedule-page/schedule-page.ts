@@ -5,12 +5,13 @@ import { DependencyEditor } from '../dependency-editor/dependency-editor';
 import { GanttChart } from '../gantt-chart/gantt-chart';
 import { ResourcePanel } from '../resource-panel/resource-panel';
 import { ResourceHistogram } from '../resource-histogram/resource-histogram';
+import { EvmDashboard } from '../evm-dashboard/evm-dashboard';
 
 const PROJECT_ID = 1004;
 
 @Component({
   selector: 'app-schedule-page',
-  imports: [TaskList, DependencyEditor, GanttChart, ResourcePanel, ResourceHistogram],
+  imports: [TaskList, DependencyEditor, GanttChart, ResourcePanel, ResourceHistogram, EvmDashboard],
   templateUrl: './schedule-page.html',
   styleUrl: './schedule-page.scss',
 })

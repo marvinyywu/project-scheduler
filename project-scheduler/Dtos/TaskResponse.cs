@@ -13,7 +13,10 @@ public sealed record TaskResponse(
     int LateFinish,
     int TotalFloat,
     int FreeFloat,
-    bool IsCritical)
+    bool IsCritical,
+    decimal Budget,
+    double PercentComplete,
+    decimal ActualCost)
 {
     public static TaskResponse FromEntity(ScheduleTask task) => new(
         task.Id,
@@ -26,5 +29,8 @@ public sealed record TaskResponse(
         task.LateFinish,
         task.TotalFloat,
         task.FreeFloat,
-        task.IsCritical);
+        task.IsCritical,
+        task.Budget,
+        task.PercentComplete,
+        task.ActualCost);
 }

@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { Project } from '../models/project';
 import { ScheduleTask } from '../models/schedule-task';
@@ -13,6 +13,9 @@ import { CreateResourceRequest } from '../models/create-resource-request';
 import { Assignment } from '../models/assignment';
 import { CreateAssignmentRequest } from '../models/create-assignment-request';
 import { LevelingResponse } from '../models/leveling-response';
+import { UpdateTaskProgressRequest } from '../models/update-task-progress-request';
+import { EvmReport } from '../models/evm-report';
+import { Baseline } from '../models/baseline';
 
 const API_BASE_URL = 'http://localhost:5008/api';
 
@@ -62,5 +65,36 @@ export class SchedulingApiService {
 
   levelSchedule(projectId: number): Promise<LevelingResponse> {
     return firstValueFrom(this.http.post<LevelingResponse>(`${API_BASE_URL}/projects/${projectId}/level`, {}));
+  }
+
+  updateTaskProgress(
+    projectId: number,
+    taskId: number,
+    request: UpdateTaskProgressRequest,
+  ): Promise<ScheduleTask> {
+    return firstValueFrom(
+      this.http.patch<ScheduleTask>(`${API_BASE_URL}/projects/${projectId}/tasks/${taskId}/progress`, request),
+    );
+  }
+
+  getEvmReport(projectId: number, asOfDay: number): Promise<EvmReport> {
+    return firstValueFrom(
+      this.http.get<EvmReport>(`${API_BASE_URL}/projects/${projectId}/evm`, { params: { asOfDay } }),
+    );
+  }
+
+  captureBaseline(projectId: number): Promise<Baseline> {
+    return firstValueFrom(this.http.post<Baseline>(`${API_BASE_URL}/projects/${projectId}/baseline`, {}));
+  }
+
+  async getBaseline(projectId: number): Promise<Baseline | null> {
+    try {
+      return await firstValueFrom(this.http.get<Baseline>(`${API_BASE_URL}/projects/${projectId}/baseline`));
+    } catch (err) {
+      if (err instanceof HttpErrorResponse && err.status === 404) {
+        return null;
+      }
+      throw err;
+    }
   }
 }

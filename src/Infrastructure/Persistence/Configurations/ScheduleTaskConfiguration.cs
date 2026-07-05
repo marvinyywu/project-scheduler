@@ -18,5 +18,8 @@ public sealed class ScheduleTaskConfiguration : IEntityTypeConfiguration<Schedul
             .WithMany()
             .HasForeignKey(t => t.ProjectId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Property(t => t.Budget).HasColumnType("decimal(18,2)");
+        builder.Property(t => t.ActualCost).HasColumnType("decimal(18,2)");
     }
 }

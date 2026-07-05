@@ -1,0 +1,91 @@
+<div class="evm-dashboard">
+  <form class="progress-form" [formGroup]="progressForm" (ngSubmit)="updateProgress()">
+    <mat-form-field appearance="outline">
+      <mat-label>Task</mat-label>
+      <mat-select formControlName="taskId">
+        @for (task of store.tasks(); track task.id) {
+          <mat-option [value]="task.id">{{ task.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>% complete</mat-label>
+      <input matInput type="number" step="1" min="0" max="100" formControlName="percentComplete" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Actual cost</mat-label>
+      <input matInput type="number" step="0.01" min="0" formControlName="actualCost" />
+    </mat-form-field>
+
+    <button mat-flat-button type="submit" [disabled]="progressForm.invalid">Update progress</button>
+  </form>
+
+  <div class="evm-controls">
+    <mat-form-field appearance="outline">
+      <mat-label>As of day</mat-label>
+      <input matInput type="number" step="1" min="0" value="0" #asOfDayInput />
+    </mat-form-field>
+
+    <button mat-stroked-button type="button" (click)="refreshEvm(asOfDayInput.valueAsNumber)">Refresh EVM</button>
+    <button mat-stroked-button type="button" (click)="captureBaseline()">Capture baseline</button>
+  </div>
+
+  @if (store.evmReport(); as report) {
+    <div class="evm-stats">
+      <div class="stat">
+        <span class="label">BAC</span>
+        <span class="value">{{ report.bac | currency }}</span>
+      </div>
+      <div class="stat">
+        <span class="label">PV</span>
+        <span class="value">{{ report.pv | currency }}</span>
+      </div>
+      <div class="stat">
+        <span class="label">EV</span>
+        <span class="value">{{ report.ev | currency }}</span>
+      </div>
+      <div class="stat">
+        <span class="label">AC</span>
+        <span class="value">{{ report.ac | currency }}</span>
+      </div>
+      <div class="stat">
+        <span class="label">SV</span>
+        <span class="value">{{ report.sv | currency }}</span>
+      </div>
+      <div class="stat">
+        <span class="label">CV</span>
+        <span class="value">{{ report.cv | currency }}</span>
+      </div>
+      <div class="stat">
+        <span class="label">SPI</span>
+        <span class="value" [class.behind-schedule]="report.spi < 1">{{ report.spi | number: '1.2-2' }}</span>
+      </div>
+      <div class="stat">
+        <span class="label">CPI</span>
+        <span class="value" [class.over-budget]="report.cpi < 1">{{ report.cpi | number: '1.2-2' }}</span>
+      </div>
+      <div class="stat">
+        <span class="label">EAC</span>
+        <span class="value">{{ report.eac | currency }}</span>
+      </div>
+      <div class="stat">
+        <span class="label">ETC</span>
+        <span class="value">{{ report.etc | currency }}</span>
+      </div>
+      <div class="stat">
+        <span class="label">VAC</span>
+        <span class="value">{{ report.vac | currency }}</span>
+      </div>
+    </div>
+  } @else {
+    <p>No EVM report yet — set an "as of day" and click Refresh EVM.</p>
+  }
+
+  @if (store.baseline(); as baseline) {
+    <p class="baseline-note">Baseline captured {{ baseline.capturedAt | date: 'short' }}</p>
+  } @else {
+    <p class="baseline-note">No baseline captured yet.</p>
+  }
+</div>
