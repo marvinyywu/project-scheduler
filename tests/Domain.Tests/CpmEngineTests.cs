@@ -75,6 +75,54 @@ public class CpmEngineTests
     }
 
     [Fact]
+    public void HasCycle_HandlesLongChain_WithoutStackOverflow()
+    {
+        // CycleDetector originally recursed once per task in the chain; a long
+        // enough chain overflowed the call stack, which is a fatal, uncatchable
+        // crash in .NET rather than a normal exception. 50,000 tasks is well
+        // beyond where the old recursive implementation would have crashed.
+        const int chainLength = 50_000;
+        var tasks = new List<ScheduleTask>(chainLength);
+        var dependencies = new List<Dependency>(chainLength - 1);
+
+        for (var i = 1; i <= chainLength; i++)
+        {
+            tasks.Add(new ScheduleTask { Id = i, Name = $"T{i}", Duration = 1 });
+        }
+
+        for (var i = 2; i <= chainLength; i++)
+        {
+            dependencies.Add(new Dependency { Id = i - 1, PredecessorId = i - 1, SuccessorId = i });
+        }
+
+        var projectDuration = CpmEngine.Compute(tasks, dependencies);
+
+        Assert.Equal(chainLength, projectDuration);
+    }
+
+    [Fact]
+    public void HasCycle_DetectsCycle_AtEndOfLongChain()
+    {
+        const int chainLength = 50_000;
+        var tasks = new List<ScheduleTask>(chainLength);
+        var dependencies = new List<Dependency>(chainLength);
+
+        for (var i = 1; i <= chainLength; i++)
+        {
+            tasks.Add(new ScheduleTask { Id = i, Name = $"T{i}", Duration = 1 });
+        }
+
+        for (var i = 2; i <= chainLength; i++)
+        {
+            dependencies.Add(new Dependency { Id = i - 1, PredecessorId = i - 1, SuccessorId = i });
+        }
+
+        dependencies.Add(new Dependency { Id = chainLength, PredecessorId = chainLength, SuccessorId = 1 });
+
+        Assert.Throws<ScheduleCycleException>(() => CpmEngine.Compute(tasks, dependencies));
+    }
+
+    [Fact]
     public void HonoursStartToStartLag()
     {
         var a = new ScheduleTask { Id = 1, Name = "A", Duration = 5 };

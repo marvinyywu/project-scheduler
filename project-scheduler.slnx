@@ -5,4 +5,5 @@
   <Project Path="src/Infrastructure/Infrastructure.csproj" />
   <Project Path="tests/Application.Tests/Application.Tests.csproj" />
   <Project Path="tests/Domain.Tests/Domain.Tests.csproj" />
+  <Project Path="tools/Benchmarks/Benchmarks.csproj" />
 </Solution>

@@ -27,24 +27,42 @@ public static class CycleDetector
         return false;
     }
 
-    private static bool HasCycleFrom(int taskId, Dictionary<int, List<int>> successors, Dictionary<int, VisitState> state)
+    // Iterative DFS with an explicit heap-allocated stack, not recursion: a long
+    // dependency chain (thousands of tasks each depending on the previous one)
+    // would otherwise recurse once per task and overflow the call stack, which
+    // is a fatal, uncatchable crash in .NET, not a normal exception.
+    private static bool HasCycleFrom(int startId, Dictionary<int, List<int>> successors, Dictionary<int, VisitState> state)
     {
-        state[taskId] = VisitState.Visiting;
+        var stack = new Stack<(int TaskId, int NextSuccessorIndex)>();
+        stack.Push((startId, 0));
+        state[startId] = VisitState.Visiting;
 
-        foreach (var successorId in successors[taskId])
+        while (stack.Count > 0)
         {
+            var (taskId, nextSuccessorIndex) = stack.Pop();
+            var taskSuccessors = successors[taskId];
+
+            if (nextSuccessorIndex >= taskSuccessors.Count)
+            {
+                state[taskId] = VisitState.Visited;
+                continue;
+            }
+
+            stack.Push((taskId, nextSuccessorIndex + 1));
+
+            var successorId = taskSuccessors[nextSuccessorIndex];
             if (state[successorId] == VisitState.Visiting)
             {
                 return true;
             }
 
-            if (state[successorId] == VisitState.Unvisited && HasCycleFrom(successorId, successors, state))
+            if (state[successorId] == VisitState.Unvisited)
             {
-                return true;
+                state[successorId] = VisitState.Visiting;
+                stack.Push((successorId, 0));
             }
         }
 
-        state[taskId] = VisitState.Visited;
         return false;
     }
 }

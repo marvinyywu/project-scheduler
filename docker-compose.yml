@@ -21,6 +21,11 @@ services:
     ports:
       - "8080:8080"
 
+  # web/src/environments/environment.production.ts's apiBaseUrl must be
+  # http://localhost:8080/api for this build to work. The browser runs on
+  # your host machine, not inside this compose network, so the api service
+  # name resolves for the api container's own outbound calls but means
+  # nothing to the browser making requests from localhost:4200.
   web:
     build:
       context: web
