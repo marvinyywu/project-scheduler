@@ -16,8 +16,9 @@ import { LevelingResponse } from '../models/leveling-response';
 import { UpdateTaskProgressRequest } from '../models/update-task-progress-request';
 import { EvmReport } from '../models/evm-report';
 import { Baseline } from '../models/baseline';
+import { environment } from '../../../environments/environment';
 
-const API_BASE_URL = 'http://localhost:5008/api';
+const API_BASE_URL = environment.apiBaseUrl;
 
 @Injectable({ providedIn: 'root' })
 export class SchedulingApiService {

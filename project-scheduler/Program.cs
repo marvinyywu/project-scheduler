@@ -29,9 +29,12 @@ builder.Services.AddScoped<UpdateTaskProgressService>();
 builder.Services.AddScoped<ComputeEvmService>();
 builder.Services.AddScoped<CaptureBaselineService>();
 
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? ["http://localhost:4200"];
+
 builder.Services.AddCors(options =>
     options.AddPolicy(AngularDevCors, policy => policy
-        .WithOrigins("http://localhost:4200")
+        .WithOrigins(allowedOrigins)
         .AllowAnyHeader()
         .AllowAnyMethod()));
 
@@ -51,5 +54,10 @@ app.UseCors(AngularDevCors);
 app.UseAuthorization();
 
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    scope.ServiceProvider.GetRequiredService<SchedulingDbContext>().Database.Migrate();
+}
 
 app.Run();

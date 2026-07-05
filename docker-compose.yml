@@ -1,0 +1,31 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    depends_on:
+      - db
+    environment:
+      ConnectionStrings__Scheduling: "Server=db;Database=ProjectScheduler;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
+      Cors__AllowedOrigins__0: "http://localhost:4200"
+    ports:
+      - "8080:8080"
+
+  web:
+    build:
+      context: web
+    ports:
+      - "4200:80"
+
+volumes:
+  mssql-data:
