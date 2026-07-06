@@ -18,3 +18,4 @@ Thumbs.db
 
 ## Docker
 .env
+.env.azure

@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiBaseUrl: 'https://REPLACE-WITH-YOUR-CONTAINER-APP-URL/api',
+  apiBaseUrl: 'https://project-scheduler-api.agreeabledesert-1d47e472.westus.azurecontainerapps.io/api',
 };
