@@ -7,7 +7,7 @@ import { ResourcePanel } from '../resource-panel/resource-panel';
 import { ResourceHistogram } from '../resource-histogram/resource-histogram';
 import { EvmDashboard } from '../evm-dashboard/evm-dashboard';
 
-const PROJECT_ID = 1004;
+const PROJECT_ID = 1;
 
 @Component({
   selector: 'app-schedule-page',

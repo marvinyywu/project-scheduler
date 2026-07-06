@@ -9,6 +9,8 @@
     <app-resource-panel />
     <app-resource-histogram />
     <app-evm-dashboard />
+  } @else if (store.error(); as error) {
+    <p class="load-error">{{ error }}</p>
   } @else {
     <p>Loading project…</p>
   }

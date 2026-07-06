@@ -43,11 +43,20 @@ export class ScheduleStore {
   );
 
   async loadProject(projectId: number): Promise<void> {
-    this.project.set(await this.api.getProject(projectId));
-    await this.refreshTasks(projectId);
-    this.resources.set(await this.api.getResources());
-    await this.refreshAssignments(projectId);
-    this.baseline.set(await this.api.getBaseline(projectId));
+    this.error.set(null);
+    try {
+      this.project.set(await this.api.getProject(projectId));
+      await this.refreshTasks(projectId);
+      this.resources.set(await this.api.getResources());
+      await this.refreshAssignments(projectId);
+      this.baseline.set(await this.api.getBaseline(projectId));
+    } catch (err) {
+      this.error.set(
+        err instanceof HttpErrorResponse
+          ? `Couldn't load project ${projectId} (HTTP ${err.status}).`
+          : `Couldn't load project ${projectId}.`,
+      );
+    }
   }
 
   async addTask(projectId: number, request: CreateTaskRequest): Promise<void> {
